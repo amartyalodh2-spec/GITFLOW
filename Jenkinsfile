@@ -2,9 +2,9 @@ pipeline {
     agent { label 'ec2-docker' }
 
     environment {
-        DOCKER_IMAGE = "amartyalodh/html-nginx"
+        DOCKER_IMAGE   = "amartyalodh/web-app"
         CONTAINER_NAME = "web-app"
-        DOCKER_CREDS = "docker-cred"
+        DOCKER_CREDS   = "docker-cred"
     }
 
     stages {
@@ -19,46 +19,43 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 sh '''
-                docker build -t $DOCKER_IMAGE:latest .
+                  docker build -t $DOCKER_IMAGE:latest .
                 '''
             }
         }
 
-    stage('Build and tag Docker Image') {
-            steps {
-                script{
-                    withDockerRegistry(credentialsId: 'docker-cred', toolName: 'docker', url: 'https://index.docker.io/v1/') {
-                       sh 'docker build -t amartyalodh/web-app:latest .'
-                  }
-                }
-            }
-        }
         stage('Push Docker Image') {
             steps {
-                script{
-                    withDockerRegistry(credentialsId: 'docker-cred', toolName: 'docker', url: 'https://index.docker.io/v1/') {
-                       sh 'docker push amartyalodh/web-app:latest'
-                  }
+                withDockerRegistry(
+                    credentialsId: DOCKER_CREDS,
+                    url: 'https://index.docker.io/v1/'
+                ) {
+                    sh '''
+                      docker push $DOCKER_IMAGE:latest
+                    '''
                 }
             }
         }
-
-       
 
         stage('Deploy on EC2') {
             steps {
-                sh '''
-                docker stop $CONTAINER_NAME || true
-                docker rm $CONTAINER_NAME || true
+                withDockerRegistry(
+                    credentialsId: DOCKER_CREDS,
+                    url: 'https://index.docker.io/v1/'
+                ) {
+                    sh '''
+                      docker stop $CONTAINER_NAME || true
+                      docker rm $CONTAINER_NAME || true
 
-                docker pull $DOCKER_IMAGE:latest
+                      docker pull $DOCKER_IMAGE:latest
 
-                docker run -d \
-                --name $CONTAINER_NAME \
-                -p 80:80 \
-                --restart always \
-                $DOCKER_IMAGE:latest
-                '''
+                      docker run -d \
+                        --name $CONTAINER_NAME \
+                        -p 80:80 \
+                        --restart always \
+                        $DOCKER_IMAGE:latest
+                    '''
+                }
             }
         }
     }
