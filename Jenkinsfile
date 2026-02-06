@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         DOCKER_IMAGE = "amartyalodh/html-nginx"
-        CONTAINER_NAME = "web"
+        CONTAINER_NAME = "web-app"
         DOCKER_CREDS = "docker-cred"
     }
 
