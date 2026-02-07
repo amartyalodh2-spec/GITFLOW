@@ -1,5 +1,5 @@
 pipeline {
-    agent { label 'ec2-docker' }
+    agent { label 'ec2' }
 
     environment {
         DOCKER_IMAGE   = "amartyalodh/web-app"
@@ -11,7 +11,7 @@ pipeline {
 
         stage('Checkout Code') {
             steps {
-                git branch: 'main',
+                git branch: 'test',
                     url: 'https://github.com/amartyalodh2-spec/GITFLOW.git'
             }
         }
